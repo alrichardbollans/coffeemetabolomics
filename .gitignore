@@ -1,5 +1,5 @@
 # Hide data
-*.csv
+#*.csv
 #*.csv#
 *.xlsx
 #*.docx
