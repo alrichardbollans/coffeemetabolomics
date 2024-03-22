@@ -4,6 +4,7 @@
 *.xlsx
 #*.docx
 #*.png
+/unused/
 
 ### Pycharm
 .idea/
@@ -161,3 +162,4 @@ po/*~
 # Large files (added with "find * -size +100M | cat >> .gitignore")
 wcvp_download/outputs/*
 wcvp_download/inputs/wcvp_v7_dec_2021.txt
+

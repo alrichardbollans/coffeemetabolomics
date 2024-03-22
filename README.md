@@ -1,1 +1,1 @@
-Some metabolomics scripts
+### Scripts for analysing metabolomics data from Compound Discoverer
