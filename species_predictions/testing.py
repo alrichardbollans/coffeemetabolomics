@@ -4,7 +4,7 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import LeaveOneOut
 
-from ML import basic_data_prep, do_basic_preprocessing, clf_scores, output_scores
+from species_predictions import basic_data_prep, do_basic_preprocessing, clf_scores, output_scores
 
 _output_path = 'outputs'
 logit_init_kwargs = {'max_iter': 1000, 'solver': 'liblinear'}
