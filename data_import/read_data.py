@@ -7,7 +7,7 @@ from typing import Tuple
 _input_path = resource_filename(__name__, "inputs")
 _output_path = resource_filename(__name__, "outputs")
 
-SPECIES = ['Arabica', 'Canephora', 'Stenophylla']
+SPECIES = ['Arabica', 'Robusta', 'Stenophylla']
 
 
 my_color_map = {'Arabica': "#1b9e77", 'Robusta': "#d95f02", 'Stenophylla': '#7570b3'}
