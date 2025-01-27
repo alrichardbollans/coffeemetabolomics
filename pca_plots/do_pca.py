@@ -5,8 +5,6 @@ import pandas as pd
 import seaborn
 from matplotlib import pyplot as plt
 from scipy.spatial.distance import euclidean
-from skbio import DistanceMatrix
-from skbio.stats.distance import permanova
 from sklearn.preprocessing import StandardScaler
 
 from data_import import my_color_map, read_norm_data, IMPORTANT_COMPS
@@ -30,7 +28,7 @@ def get_pca_data(n_comp=None):
     pca = PCA(svd_solver='full', n_components=n_comp)
     pca.fit(scaled_X)
     print(f'PCA components: {pca.n_components_}. Explaining variance: {n_comp}')
-    pca_df = pd.DataFrame(pca.transform(scaled_X), index=scaled_X.index, columns=['PC' + str(i) for i in range(pca.n_components_)])
+    pca_df = pd.DataFrame(pca.transform(scaled_X), index=scaled_X.index, columns=['PC' + str(i + 1) for i in range(pca.n_components_)])
     return pca, pca_df, y
 
 
@@ -61,26 +59,26 @@ def plot_pca():
     #### Matrix plot to show general groupings
     import plotly.express as px
     labels = {
-        'PC' + str(i): f"PC {i + 1} ({var:.1f}%)"
+        'PC' + str(i): f"PC {i} ({var:.1f}%)"
         for i, var in enumerate(pca.explained_variance_ratio_ * 100)
     }
 
     fig = px.scatter_matrix(
         pca_df.drop(columns=['species']),
         labels=labels,
-        dimensions=['PC0', 'PC1', 'PC2', 'PC3'],
+        dimensions=['PC1', 'PC2', 'PC3', 'PC4'],
         color=pca_df["species"],
         color_discrete_map=my_color_map
     )
     fig.update_traces(diagonal_visible=False, showupperhalf=False)
-    fig.update_layout(margin=dict(l=30, r=10, t=10, b=10), legend=dict(title=None, font=dict(size=22),itemsizing= 'constant',
+    fig.update_layout(margin=dict(l=30, r=10, t=10, b=10), legend=dict(title=None, font=dict(size=22), itemsizing='constant',
                                                                        yanchor="top",
                                                                        y=0.9,
                                                                        xanchor="left",
                                                                        x=0.7
                                                                        ), margin_r=10, margin_l=80, margin_b=70)
 
-    fig.write_image("outputs/pcas_matrix.jpg", scale=5)
+    fig.write_image("outputs/pcas_matrix.jpg", scale=5)  # for some reason points are removed with scale>6
     #### 3D plot to show general groupings
     seaborn.set_style("whitegrid", {'axes.grid': False})
 
@@ -88,7 +86,7 @@ def plot_pca():
     ax = fig.add_subplot(111, projection='3d', )
 
     for s in pca_df['species'].unique():
-        ax.scatter(pca_df['PC0'][pca_df['species'] == s], pca_df['PC1'][pca_df['species'] == s], pca_df['PC2'][pca_df['species'] == s], label=s)
+        ax.scatter(pca_df['PC1'][pca_df['species'] == s], pca_df['PC2'][pca_df['species'] == s], pca_df['PC3'][pca_df['species'] == s], label=s)
 
     ax.legend()
     plt.tight_layout()
@@ -96,7 +94,7 @@ def plot_pca():
     plt.close()
     import plotly.express as px
     fig = px.scatter_3d(
-        pca_df, x='PC0', y='PC1', z='PC2', color=pca_df['species'],
+        pca_df, x='PC1', y='PC2', z='PC3', color=pca_df['species'],
         title=f'Total Explained Variance: {0:.2f}%'
     )
     plt.close()
@@ -143,6 +141,9 @@ def add_kmeans_to_pca():
 
 
 def do_permanova():
+    from skbio.stats.distance import permanova
+    from skbio import DistanceMatrix
+
     # Ref Anderson, Marti J. “A new method for non-parametric multivariate analysis of variance.” Austral Ecology 26.1 (2001): 32-46.
     if not os.path.exists(os.path.join('outputs', 'permoanova')):
         os.mkdir(os.path.join('outputs', 'permoanova'))
@@ -153,7 +154,7 @@ def do_permanova():
         dissimilarity_matrix = DistanceMatrix.from_iterable(df_to_test[cols].values, metric=euclidean)
         # df = dissimilarity_matrix.to_data_frame()
         # Use the permanova function from scikit-bio
-        result = permanova(dissimilarity_matrix, df_to_test['species'])
+        result = permanova(dissimilarity_matrix, df_to_test['species'], permutations=1000)
 
         # Step 6: Interpret Results
         print(tag)
@@ -167,6 +168,14 @@ def do_permanova():
 
     # Do all groups
     prm_test(pca_df, pcs, 'all_groups_pcs')
+
+    ## Run on components in plots
+    pca, pca_df, y = get_pca_data(4)
+    pcs = pca_df.columns.tolist()
+    pca_df['species'] = y
+
+    # Do all groups
+    prm_test(pca_df, pcs, 'all_groups_4_pcs')
 
     # Do all pcs
     pca, pca_df, y = get_pca_data(None)
@@ -193,6 +202,6 @@ def do_permanova():
 
 if __name__ == '__main__':
     plot_pca()
-    # do_permanova()
-    # plot_loadings('PC0', 'PC1')
-    # plot_loadings('PC0', 'PC1', plot_nlargest=False)
+    do_permanova()
+    # plot_loadings(0, 1)
+    # plot_loadings(0, 1, plot_nlargest=False)
