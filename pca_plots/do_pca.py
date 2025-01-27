@@ -1,4 +1,5 @@
 import os.path
+import random
 
 import numpy as np
 import pandas as pd
@@ -7,7 +8,7 @@ from matplotlib import pyplot as plt
 from scipy.spatial.distance import euclidean
 from sklearn.preprocessing import StandardScaler
 
-from data_import import my_color_map, read_norm_data, IMPORTANT_COMPS
+from data_import import my_color_map, read_norm_data, numbering, COMPS_OF_INTEREST
 
 
 def get_data_to_pca():
@@ -113,31 +114,54 @@ def plot_loadings(var1, var2, plot_nlargest: bool = True):
     useful_df = pd.DataFrame(pca_transformer.components_, columns=pca_transformer.feature_names_in_, index=pca_df.columns)
     useful_df = useful_df.loc[[var1, var2]]
 
-    nlargest_lists = useful_df.apply(lambda x: x.abs().nlargest(10).index.tolist(), axis=1).tolist()
-    nlargest = list(set(nlargest_lists[0] + nlargest_lists[1]))
+
     if plot_nlargest:
+        # COmpute the variables that influence the given principal components the most.
+        nlargest_lists = useful_df.apply(lambda x: x.abs().nlargest(5).index.tolist(), axis=1).tolist()
+        nlargest = list(set(nlargest_lists[0] + nlargest_lists[1]))
         comps_to_plot = nlargest
+        scale_factor =1000
     else:
-        comps_to_plot = IMPORTANT_COMPS
-    scale_factor = 1000  # Given the number of comps, add scaling to make loadings visible
+        comps_to_plot = COMPS_OF_INTEREST
+        scale_factor = 1000  # Given the number of comps, add scaling to make loadings visible
+    shift_up = [23, 32, 15, 11]
+    shift_left = [37]
+    shift_right = [34, 35]
+    shift_down = [7,26]
     for comp in comps_to_plot:
         x_val = useful_df[comp].loc[var1] * scale_factor
         y_val = useful_df[comp].loc[var2] * scale_factor
-        plt.arrow(0, 0, x_val, y_val, color='r', alpha=0.5, shape='full', head_width=0.01, head_length=0.015)
-        plt.text(x_val * 1.1, y_val * 1.1, comp, color='g', ha='center', va='center')
+        plt.arrow(0, 0, x_val, y_val, color='grey', alpha=0.6, shape='full', head_width=0.02, head_length=0.015)
+        xshift =0
+        yshift =0
 
-    plt.grid()
+        if not plot_nlargest:
+            name = numbering[comp]
+            fontdict = {'size' : 8}
+
+            if name in shift_up:
+                yshift = 1.3
+            if name in shift_down:
+                yshift = -1.5
+            if name in shift_left:
+                xshift = -1.5
+            if name in shift_right:
+                xshift = 1.7
+        else:
+            name = comp
+            fontdict = {'size' : 6}
+            xshift = random.uniform(-2, 2)
+            yshift = random.uniform(-2, 2)
+        plt.text((x_val * 1.07)+xshift, (y_val * 1.05)+yshift, name, color='black', ha='center', va='center',font = fontdict )
+
+    plt.tight_layout()
+    dpi = 600
     if plot_nlargest:
-        plt.savefig(os.path.join('outputs', f'nlargest_loadings_{var1}_{var2}.jpg'), dpi=300)
+        plt.savefig(os.path.join('outputs', f'nlargest_loadings_{var1}_{var2}.jpg'), dpi=dpi)
     else:
-        plt.savefig(os.path.join('outputs', f'loadings_{var1}_{var2}.jpg'), dpi=300)
+        plt.savefig(os.path.join('outputs', f'loadings_{var1}_{var2}.jpg'), dpi=dpi)
 
     plt.close()
-
-
-def add_kmeans_to_pca():
-    # do kmeans clustering with k=3 on the pcas and plot on pcas grpahs.
-    pass
 
 
 def do_permanova():
@@ -201,7 +225,8 @@ def do_permanova():
 
 
 if __name__ == '__main__':
-    plot_pca()
-    do_permanova()
-    # plot_loadings(0, 1)
+    # plot_pca()
+    # do_permanova()
+    plot_loadings('PC1', 'PC2')
+    plot_loadings('PC1', 'PC2', plot_nlargest=False)
     # plot_loadings(0, 1, plot_nlargest=False)
