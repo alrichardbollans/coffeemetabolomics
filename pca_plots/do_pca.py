@@ -108,26 +108,29 @@ def plot_loadings(var1, var2, plot_nlargest: bool = True):
     pca_transformer, pca_df, y = get_pca_data()
     pca_df['Species'] = y
 
-    sns.scatterplot(data=pca_df, x=var1, y=var2, hue="Species", palette=my_color_map)
-
+    ax = sns.scatterplot(data=pca_df, x=var1, y=var2, hue="Species", palette=my_color_map)
+    labels = {
+        'PC' + str(i+1): f"PC {i+1} ({var:.1f}%)"
+        for i, var in enumerate(pca_transformer.explained_variance_ratio_ * 100)
+    }
+    ax.set(xlabel=labels[var1], ylabel=labels[var2])
     pca_df = pca_df.drop(columns=['Species'])
     useful_df = pd.DataFrame(pca_transformer.components_, columns=pca_transformer.feature_names_in_, index=pca_df.columns)
     useful_df = useful_df.loc[[var1, var2]]
 
+    scale_factor = 1400  # Given the number of comps, add scaling to make loadings visible
 
     if plot_nlargest:
         # COmpute the variables that influence the given principal components the most.
         nlargest_lists = useful_df.apply(lambda x: x.abs().nlargest(5).index.tolist(), axis=1).tolist()
         nlargest = list(set(nlargest_lists[0] + nlargest_lists[1]))
         comps_to_plot = nlargest
-        scale_factor =1000
     else:
         comps_to_plot = COMPS_OF_INTEREST
-        scale_factor = 1000  # Given the number of comps, add scaling to make loadings visible
-    shift_up = [23, 32, 15, 11]
+    shift_up = [23, 32, 15, 11,21,2,24,10,29]
     shift_left = [37]
-    shift_right = [34, 35]
-    shift_down = [7,26]
+    shift_right = [34, 35, 16]
+    shift_down = [7,26, 33,3,1]
     for comp in comps_to_plot:
         x_val = useful_df[comp].loc[var1] * scale_factor
         y_val = useful_df[comp].loc[var2] * scale_factor
@@ -137,8 +140,9 @@ def plot_loadings(var1, var2, plot_nlargest: bool = True):
 
         if not plot_nlargest:
             name = numbering[comp]
-            fontdict = {'size' : 8}
-
+            fontdict = {'size' : 10}
+            if name ==32:
+                yshift=1.5
             if name in shift_up:
                 yshift = 1.3
             if name in shift_down:
@@ -147,6 +151,8 @@ def plot_loadings(var1, var2, plot_nlargest: bool = True):
                 xshift = -1.5
             if name in shift_right:
                 xshift = 1.7
+            if name ==32:
+                yshift=2
         else:
             name = comp
             fontdict = {'size' : 6}
