@@ -60,7 +60,7 @@ def plot_pca():
     #### Matrix plot to show general groupings
     import plotly.express as px
     labels = {
-        'PC' + str(i): f"PC {i} ({var:.1f}%)"
+        'PC' + str(i+1): f"PC {i+1} ({var:.1f}%)"
         for i, var in enumerate(pca.explained_variance_ratio_ * 100)
     }
 
@@ -231,8 +231,8 @@ def do_permanova():
 
 
 if __name__ == '__main__':
-    # plot_pca()
+    plot_pca()
     # do_permanova()
-    plot_loadings('PC1', 'PC2')
-    plot_loadings('PC1', 'PC2', plot_nlargest=False)
+    # plot_loadings('PC1', 'PC2')
+    # plot_loadings('PC1', 'PC2', plot_nlargest=False)
     # plot_loadings(0, 1, plot_nlargest=False)
